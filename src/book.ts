@@ -4,10 +4,12 @@ import { LoginPage } from "./pages/LoginPage.js";
 import { BookingPage } from "./pages/BookingPage.js";
 import { CheckoutPage } from "./pages/CheckoutPage.js";
 import { ConfirmationPage } from "./pages/ConfirmationPage.js";
+import { notifyBookingSuccess, notifyBookingFailure } from "./whatsapp.js";
 
 async function bookSquashCourts() {
   const maxRetries = 3;
   let attempt = 0;
+  const bookedSlots: string[] = [];
 
   while (attempt < maxRetries) {
     attempt++;
@@ -84,6 +86,9 @@ async function bookSquashCourts() {
 
         console.log(`✅ Successfully added to basket: ${selectedCourt}`);
 
+        // Track booked slots
+        bookedSlots.push(`${slot.day} ${slot.time} - ${selectedCourt}`);
+
         // Small delay between bookings
         await page.waitForTimeout(2000);
       }
@@ -105,6 +110,9 @@ async function bookSquashCourts() {
 
       console.log("\n✅ All bookings completed and checkout finished!");
 
+      // Send success notification
+      await notifyBookingSuccess(bookedSlots);
+
       // Success - break out of retry loop
       break;
     } catch (error) {
@@ -112,6 +120,8 @@ async function bookSquashCourts() {
       console.error(error);
 
       if (attempt >= maxRetries) {
+        // Send failure notification only after all retries are exhausted
+        await notifyBookingFailure(error as Error, attempt, maxRetries);
         console.error(`\n❌ Failed after ${maxRetries} attempts. Giving up.`);
         process.exit(1);
       } else {
