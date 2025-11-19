@@ -1,0 +1,40 @@
+name: Book Squash Court
+
+on:
+  schedule:
+    # Run every Tuesday at 10:01 PM UK time
+    # During GMT (late Oct - late Mar): 22:01 UTC
+    - cron: "1 22 * * 2"
+    # During BST (late Mar - late Oct): 21:01 UTC
+    - cron: "1 21 * * 2"
+    # Note: This will run twice during BST months, but bookings are idempotent
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  book-court:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps --only-shell chromium
+
+      - name: Run booking script
+        env:
+          BOOKING_URL: ${{ secrets.BOOKING_URL }}
+          USERNAME: ${{ secrets.USERNAME }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+          CVV: ${{ secrets.CVV }}
+          HEADLESS: true
+        run: npm run book
