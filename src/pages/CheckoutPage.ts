@@ -17,6 +17,9 @@ export class CheckoutPage extends BasePage {
   readonly confirmBookingButton = this.page.getByRole("button", {
     name: /confirm booking/i,
   });
+  readonly checkoutHeading = this.page.getByRole("heading", {
+    name: /checkout/i,
+  });
 
   async selectSavedCard() {
     await this.savedCardRadio.waitFor({ state: "visible" });

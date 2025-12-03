@@ -113,7 +113,7 @@ async function bookSquashCourts() {
       // Complete checkout
       // Wait for page URL to include "checkout"
       await page.waitForURL(/.*checkout.*/);
-      await page.getByText("Checkout").waitFor({ state: "visible" });
+      await checkoutPage.checkoutHeading.waitFor({ state: "visible" });
 
       // Use credit if available
       if (await checkoutPage.useCreditButton.isVisible()) {
