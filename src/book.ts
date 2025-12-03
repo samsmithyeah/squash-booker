@@ -1,4 +1,5 @@
-import { chromium, Browser, Page } from "playwright";
+import { chromium, Browser, BrowserContext, Page } from "playwright";
+import * as fs from "fs";
 import { config } from "./config.js";
 import { LoginPage } from "./pages/LoginPage.js";
 import { BookingPage } from "./pages/BookingPage.js";
@@ -11,9 +12,15 @@ async function bookSquashCourts() {
   let attempt = 0;
   const bookedSlots: string[] = [];
 
+  // Ensure artifacts directory exists for artifacts
+  if (!fs.existsSync("artifacts")) {
+    fs.mkdirSync("artifacts", { recursive: true });
+  }
+
   while (attempt < maxRetries) {
     attempt++;
     let browser: Browser | null = null;
+    let context: BrowserContext | null = null;
     let page: Page | null = null;
 
     try {
@@ -25,7 +32,10 @@ async function bookSquashCourts() {
         headless: config.headless,
       });
 
-      const context = await browser.newContext();
+      context = await browser.newContext({
+        recordVideo: { dir: "artifacts" },
+      });
+      await context.tracing.start({ screenshots: true, snapshots: true });
       page = await context.newPage();
 
       // Initialize page objects
@@ -127,6 +137,14 @@ async function bookSquashCourts() {
     } catch (error) {
       console.error(`\n❌ Error occurred during booking attempt ${attempt}:`);
       console.error(error);
+
+      // Save artifacts on failure
+      if (page) {
+        await page.screenshot({ path: `artifacts/failure-attempt-${attempt}.png` });
+      }
+      if (context) {
+        await context.tracing.stop({ path: `artifacts/trace-attempt-${attempt}.zip` });
+      }
 
       if (attempt >= maxRetries) {
         // Send failure notification only after all retries are exhausted
