@@ -29,7 +29,7 @@ function formatTimeSlot(startTime: string): string {
   const [hours, minutes] = startTime.split(":").map(Number);
   const endMinutes = minutes + 40;
   const endHours = hours + Math.floor(endMinutes / 60);
-  const endTime = `${endHours}:${String(endMinutes % 60).padStart(2, "0")}`;
+  const endTime = `${String(endHours).padStart(2, "0")}:${String(endMinutes % 60).padStart(2, "0")}`;
   return `${startTime} - ${endTime}`;
 }
 
