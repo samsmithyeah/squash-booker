@@ -1,5 +1,4 @@
 import { BasePage } from "./BasePage.js";
-import { expect } from "playwright/test";
 
 export class BookingPage extends BasePage {
   // Element locators
@@ -73,11 +72,11 @@ export class BookingPage extends BasePage {
       .first()
       .locator("..")
       .locator("..");
-    await expect(timeCard).toBeVisible();
+    await timeCard.waitFor({ state: "visible" });
     const bookButton = timeCard.getByRole("link", {
       name: /squash court 40min from/i,
     });
-    await expect(bookButton).toBeVisible();
+    await bookButton.waitFor({ state: "visible" });
     await bookButton.click();
   }
 
@@ -87,7 +86,7 @@ export class BookingPage extends BasePage {
     await this.courtDropdownControl.click({ force: true });
 
     // Get all options from the menu
-    await expect(this.courtDropdownMenu).toBeVisible();
+    await this.courtDropdownMenu.waitFor({ state: "visible" });
 
     const options = await this.courtDropdownMenu
       .locator('[class*="option"]')

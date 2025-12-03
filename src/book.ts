@@ -37,6 +37,7 @@ async function bookSquashCourts() {
       });
       await context.tracing.start({ screenshots: true, snapshots: true });
       page = await context.newPage();
+      page.setDefaultTimeout(30000);
 
       // Initialize page objects
       const loginPage = new LoginPage(page);
@@ -110,6 +111,8 @@ async function bookSquashCourts() {
       await bookingPage.checkoutButton.click();
 
       // Complete checkout
+      // Wait for page URL to include "checkout"
+      await page.waitForURL(/.*checkout.*/);
 
       // Use credit if available
       if (await checkoutPage.useCreditButton.isVisible()) {
@@ -140,10 +143,14 @@ async function bookSquashCourts() {
 
       // Save artifacts on failure
       if (page) {
-        await page.screenshot({ path: `artifacts/failure-attempt-${attempt}.png` });
+        await page.screenshot({
+          path: `artifacts/failure-attempt-${attempt}.png`,
+        });
       }
       if (context) {
-        await context.tracing.stop({ path: `artifacts/trace-attempt-${attempt}.zip` });
+        await context.tracing.stop({
+          path: `artifacts/trace-attempt-${attempt}.zip`,
+        });
       }
 
       if (attempt >= maxRetries) {

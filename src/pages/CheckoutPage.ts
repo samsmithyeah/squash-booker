@@ -19,7 +19,7 @@ export class CheckoutPage extends BasePage {
   });
 
   async selectSavedCard() {
-    await expect(this.savedCardRadio).toBeVisible();
+    await this.savedCardRadio.waitFor({ state: "visible" });
     await this.savedCardRadio.check();
   }
 
