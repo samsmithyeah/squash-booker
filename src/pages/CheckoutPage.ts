@@ -14,8 +14,9 @@ export class CheckoutPage extends BasePage {
   readonly useCreditButton = this.page.getByRole("button", {
     name: /pay full amount using credit/i,
   });
+  // Note: Button has aria-label="Pay now" but visible text is "Confirm booking"
   readonly confirmBookingButton = this.page.getByRole("button", {
-    name: /confirm booking/i,
+    name: "Pay now",
   });
   readonly checkoutHeading = this.page.getByRole("heading", {
     name: /checkout/i,
