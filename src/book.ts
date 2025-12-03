@@ -1,4 +1,5 @@
-import { chromium, Browser, Page } from "playwright";
+import { chromium, Browser, BrowserContext, Page } from "playwright";
+import * as fs from "fs";
 import { config } from "./config.js";
 import { LoginPage } from "./pages/LoginPage.js";
 import { BookingPage } from "./pages/BookingPage.js";
@@ -11,9 +12,15 @@ async function bookSquashCourts() {
   let attempt = 0;
   const bookedSlots: string[] = [];
 
+  // Ensure artifacts directory exists for artifacts
+  if (!fs.existsSync("artifacts")) {
+    fs.mkdirSync("artifacts", { recursive: true });
+  }
+
   while (attempt < maxRetries) {
     attempt++;
     let browser: Browser | null = null;
+    let context: BrowserContext | null = null;
     let page: Page | null = null;
 
     try {
@@ -25,8 +32,12 @@ async function bookSquashCourts() {
         headless: config.headless,
       });
 
-      const context = await browser.newContext();
+      context = await browser.newContext({
+        recordVideo: { dir: "artifacts" },
+      });
+      await context.tracing.start({ screenshots: true, snapshots: true });
       page = await context.newPage();
+      page.setDefaultTimeout(30000);
 
       // Initialize page objects
       const loginPage = new LoginPage(page);
@@ -100,10 +111,22 @@ async function bookSquashCourts() {
       await bookingPage.checkoutButton.click();
 
       // Complete checkout
-      await checkoutPage.selectSavedCard();
-      await checkoutPage.acceptTerms();
-      await checkoutPage.cvvInput.fill(config.cvv);
-      await checkoutPage.payNowButton.click();
+      // Wait for page URL to include "checkout"
+      await page.waitForURL(/.*checkout.*/);
+      await checkoutPage.checkoutHeading.waitFor({ state: "visible" });
+
+      // Use credit if available
+      if (await checkoutPage.useCreditButton.isVisible()) {
+        console.log("Using available credit for payment...");
+        await checkoutPage.useCreditButton.click();
+        await checkoutPage.confirmBookingButton.click();
+      } else {
+        console.log("No credit available, proceeding with saved card...");
+        await checkoutPage.selectSavedCard();
+        await checkoutPage.acceptTerms();
+        await checkoutPage.cvvInput.fill(config.cvv);
+        await checkoutPage.payNowButton.click();
+      }
 
       // Wait for confirmation
       await confirmationPage.confirmationText.waitFor({ state: "visible" });
@@ -118,6 +141,18 @@ async function bookSquashCourts() {
     } catch (error) {
       console.error(`\n❌ Error occurred during booking attempt ${attempt}:`);
       console.error(error);
+
+      // Save artifacts on failure
+      if (page) {
+        await page.screenshot({
+          path: `artifacts/failure-attempt-${attempt}.png`,
+        });
+      }
+      if (context) {
+        await context.tracing.stop({
+          path: `artifacts/trace-attempt-${attempt}.zip`,
+        });
+      }
 
       if (attempt >= maxRetries) {
         // Send failure notification only after all retries are exhausted
