@@ -11,6 +11,12 @@ export class CheckoutPage extends BasePage {
   });
   readonly payNowButton = this.page.getByRole("button", { name: /pay.*now/i });
   readonly cvvInput = this.page.getByLabel("Security Code (CVV)");
+  readonly useCreditButton = this.page.getByRole("button", {
+    name: /pay full amount using credit/i,
+  });
+  readonly confirmBookingButton = this.page.getByRole("button", {
+    name: /confirm booking/i,
+  });
 
   async selectSavedCard() {
     await expect(this.savedCardRadio).toBeVisible();

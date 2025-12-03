@@ -100,10 +100,19 @@ async function bookSquashCourts() {
       await bookingPage.checkoutButton.click();
 
       // Complete checkout
-      await checkoutPage.selectSavedCard();
-      await checkoutPage.acceptTerms();
-      await checkoutPage.cvvInput.fill(config.cvv);
-      await checkoutPage.payNowButton.click();
+
+      // Use credit if available
+      if (await checkoutPage.useCreditButton.isVisible()) {
+        console.log("Using available credit for payment...");
+        await checkoutPage.useCreditButton.click();
+        await checkoutPage.confirmBookingButton.click();
+      } else {
+        console.log("No credit available, proceeding with saved card...");
+        await checkoutPage.selectSavedCard();
+        await checkoutPage.acceptTerms();
+        await checkoutPage.cvvInput.fill(config.cvv);
+        await checkoutPage.payNowButton.click();
+      }
 
       // Wait for confirmation
       await confirmationPage.confirmationText.waitFor({ state: "visible" });
