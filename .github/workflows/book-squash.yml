@@ -2,13 +2,81 @@ name: Book Squash Court
 
 on:
   schedule:
-    # Run every Tuesday at 10:01 PM UK time
-    # During GMT (late Oct - late Mar): 22:01 UTC
-    - cron: "1 22 * * 2"
-    # During BST (late Mar - late Oct): 21:01 UTC
-    - cron: "1 21 * * 2"
-    # Note: This will run twice during BST months, but bookings are idempotent
-  workflow_dispatch: # Allow manual triggering
+    # Run every Tuesday at 10:02 PM UK time (22:02 UTC during GMT, 21:02 UTC during BST)
+    # Using 22:02 UTC - this is 10:02 PM GMT / 11:02 PM BST
+    - cron: "2 22 * * 2"
+  workflow_dispatch:
+    inputs:
+      day:
+        description: "Day to book"
+        required: false
+        type: choice
+        default: "Mon"
+        options:
+          - Mon
+          - Tue
+          - Wed
+          - Thu
+          - Fri
+          - Sat
+          - Sun
+      time1:
+        description: "First time slot"
+        required: false
+        type: choice
+        default: "19:40"
+        options:
+          - "07:00"
+          - "07:40"
+          - "08:20"
+          - "09:00"
+          - "09:40"
+          - "10:20"
+          - "11:00"
+          - "11:40"
+          - "12:20"
+          - "13:00"
+          - "13:40"
+          - "14:20"
+          - "15:00"
+          - "15:40"
+          - "16:20"
+          - "17:00"
+          - "17:40"
+          - "18:20"
+          - "19:00"
+          - "19:40"
+          - "20:20"
+          - "21:00"
+      time2:
+        description: "Second time slot (optional)"
+        required: false
+        type: choice
+        default: "20:20"
+        options:
+          - none
+          - "07:00"
+          - "07:40"
+          - "08:20"
+          - "09:00"
+          - "09:40"
+          - "10:20"
+          - "11:00"
+          - "11:40"
+          - "12:20"
+          - "13:00"
+          - "13:40"
+          - "14:20"
+          - "15:00"
+          - "15:40"
+          - "16:20"
+          - "17:00"
+          - "17:40"
+          - "18:20"
+          - "19:00"
+          - "19:40"
+          - "20:20"
+          - "21:00"
 
 jobs:
   book-court:
@@ -32,6 +100,9 @@ jobs:
 
       - name: Run booking script
         env:
+          BOOKING_DAY: ${{ github.event.inputs.day }}
+          BOOKING_TIME1: ${{ github.event.inputs.time1 }}
+          BOOKING_TIME2: ${{ github.event.inputs.time2 }}
           BOOKING_URL: ${{ secrets.BOOKING_URL }}
           USERNAME: ${{ secrets.USERNAME }}
           PASSWORD: ${{ secrets.PASSWORD }}
@@ -42,3 +113,11 @@ jobs:
           TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
           TWILIO_WHATSAPP_TO: ${{ secrets.TWILIO_WHATSAPP_TO }}
         run: npm run book
+
+      - name: Upload Playwright artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-artifacts
+          path: test-results/
+          retention-days: 30

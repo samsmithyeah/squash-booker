@@ -25,20 +25,45 @@ export interface BookingConfig {
   twilio: TwilioConfig;
 }
 
+function formatTimeSlot(startTime: string): string {
+  const [hours, minutes] = startTime.split(":").map(Number);
+  const endMinutes = minutes + 40;
+  const endHours = hours + Math.floor(endMinutes / 60);
+  const endTime = `${endHours}:${String(endMinutes % 60).padStart(2, "0")}`;
+  return `${startTime} - ${endTime}`;
+}
+
+function parseTimeSlots(): TimeSlot[] {
+  const day = process.env.BOOKING_DAY;
+  const time1 = process.env.BOOKING_TIME1;
+  const time2 = process.env.BOOKING_TIME2;
+
+  // If no inputs provided, use defaults
+  if (!day && !time1) {
+    return [
+      { day: "Mon", time: "19:40 - 20:20" },
+      { day: "Mon", time: "20:20 - 21:00" },
+    ];
+  }
+
+  const slots: TimeSlot[] = [];
+  const bookingDay = day || "Mon";
+
+  if (time1) {
+    slots.push({ day: bookingDay, time: formatTimeSlot(time1) });
+  }
+  if (time2 && time2 !== "none") {
+    slots.push({ day: bookingDay, time: formatTimeSlot(time2) });
+  }
+
+  return slots;
+}
+
 export const config: BookingConfig = {
   bookingUrl: process.env.BOOKING_URL || "",
   username: process.env.USERNAME || "",
   password: process.env.PASSWORD || "",
-  timeSlots: [
-    {
-      day: "Mon",
-      time: "19:40 - 20:20",
-    },
-    {
-      day: "Mon",
-      time: "20:20 - 21:00",
-    },
-  ],
+  timeSlots: parseTimeSlots(),
   acceptedCourts: ["Squash Court 1", "Squash Court 2"],
   headless: process.env.HEADLESS === "true" || false,
   cvv: process.env.CVV || "",

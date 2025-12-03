@@ -15,9 +15,9 @@ export default defineConfig({
 
   use: {
     baseURL: process.env.BOOKING_URL,
-    trace: "on",
-    screenshot: "on",
-    video: "on",
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
     // headless: process.env.HEADLESS === "true" || false,
   },
 
