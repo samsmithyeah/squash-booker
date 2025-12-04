@@ -5,7 +5,7 @@ import { LoginPage } from "./pages/LoginPage.js";
 import { BookingPage } from "./pages/BookingPage.js";
 import { CheckoutPage } from "./pages/CheckoutPage.js";
 import { ConfirmationPage } from "./pages/ConfirmationPage.js";
-import { notifyBookingSuccess, notifyBookingFailure } from "./whatsapp.js";
+import { notifyBookingSuccess, notifyBookingFailure } from "./telegram.js";
 
 async function bookSquashCourts() {
   const maxRetries = 3;
@@ -131,10 +131,14 @@ async function bookSquashCourts() {
       // Wait for confirmation
       await confirmationPage.confirmationText.waitFor({ state: "visible" });
 
+      // Take confirmation screenshot
+      const screenshotPath = "artifacts/confirmation.png";
+      await page.screenshot({ path: screenshotPath, fullPage: true });
+
       console.log("\n✅ All bookings completed and checkout finished!");
 
-      // Send success notification
-      await notifyBookingSuccess(bookedSlots);
+      // Send success notification with screenshot
+      await notifyBookingSuccess(bookedSlots, screenshotPath);
 
       // Success - break out of retry loop
       break;
@@ -143,9 +147,10 @@ async function bookSquashCourts() {
       console.error(error);
 
       // Save artifacts on failure
+      const failureScreenshotPath = `artifacts/failure-attempt-${attempt}.png`;
       if (page) {
         await page.screenshot({
-          path: `artifacts/failure-attempt-${attempt}.png`,
+          path: failureScreenshotPath,
         });
       }
       if (context) {
@@ -156,7 +161,13 @@ async function bookSquashCourts() {
 
       if (attempt >= maxRetries) {
         // Send failure notification only after all retries are exhausted
-        await notifyBookingFailure(error as Error, attempt, maxRetries);
+        const err = error instanceof Error ? error : new Error(String(error));
+        await notifyBookingFailure(
+          err,
+          attempt,
+          maxRetries,
+          failureScreenshotPath
+        );
         console.error(`\n❌ Failed after ${maxRetries} attempts. Giving up.`);
         process.exit(1);
       } else {

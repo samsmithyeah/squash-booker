@@ -16,7 +16,7 @@ export class BasePage {
         await this.page.waitForTimeout(1000);
         console.log("Cookies accepted");
         return; // Success, exit
-      } catch (error) {
+      } catch {
         if (attempt === maxRetries) {
           console.log("Cookies banner not found or already accepted");
         } else {
