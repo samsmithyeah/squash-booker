@@ -5,13 +5,9 @@ export interface TimeSlot {
   time: string; // e.g., "19:40 - 20:20"
 }
 
-export interface TwilioConfig {
-  accountSid: string;
-  authToken: string;
-  apiKeySid?: string;
-  apiKeySecret?: string;
-  whatsappFrom: string;
-  whatsappTo: string;
+export interface TelegramConfig {
+  botToken: string;
+  chatId: string;
 }
 
 export interface BookingConfig {
@@ -22,7 +18,7 @@ export interface BookingConfig {
   acceptedCourts: string[]; // e.g., ["Squash Court 1", "Squash Court 2"]
   headless: boolean;
   cvv: string;
-  twilio: TwilioConfig;
+  telegram: TelegramConfig;
 }
 
 function formatTimeSlot(startTime: string): string {
@@ -67,13 +63,9 @@ export const config: BookingConfig = {
   acceptedCourts: ["Squash Court 1", "Squash Court 2"],
   headless: process.env.HEADLESS === "true" || false,
   cvv: process.env.CVV || "",
-  twilio: {
-    accountSid: process.env.TWILIO_ACCOUNT_SID || "",
-    authToken: process.env.TWILIO_AUTH_TOKEN || "",
-    apiKeySid: process.env.TWILIO_API_KEY_SID,
-    apiKeySecret: process.env.TWILIO_API_KEY_SECRET,
-    whatsappFrom: process.env.TWILIO_WHATSAPP_FROM || "",
-    whatsappTo: process.env.TWILIO_WHATSAPP_TO || "",
+  telegram: {
+    botToken: process.env.TELEGRAM_BOT_TOKEN || "",
+    chatId: process.env.TELEGRAM_CHAT_ID || "",
   },
 };
 
