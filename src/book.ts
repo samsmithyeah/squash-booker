@@ -5,6 +5,8 @@ import { LoginPage } from "./pages/LoginPage.js";
 import { BookingPage } from "./pages/BookingPage.js";
 import { CheckoutPage } from "./pages/CheckoutPage.js";
 import { ConfirmationPage } from "./pages/ConfirmationPage.js";
+import { BookingsPage } from "./pages/BookingsPage.js";
+import { OrderPage } from "./pages/OrderPage.js";
 import { notifyBookingSuccess, notifyBookingFailure } from "./telegram.js";
 
 async function bookSquashCourts() {
@@ -44,6 +46,8 @@ async function bookSquashCourts() {
       const bookingPage = new BookingPage(page);
       const checkoutPage = new CheckoutPage(page);
       const confirmationPage = new ConfirmationPage(page);
+      const bookingsPage = new BookingsPage(page);
+      const orderPage = new OrderPage(page);
 
       console.log("Starting squash court booking...");
 
@@ -130,15 +134,39 @@ async function bookSquashCourts() {
 
       // Wait for confirmation
       await confirmationPage.confirmationText.waitFor({ state: "visible" });
-
-      // Take confirmation screenshot
-      const screenshotPath = "artifacts/confirmation.png";
-      await page.screenshot({ path: screenshotPath, fullPage: true });
-
       console.log("\n✅ All bookings completed and checkout finished!");
 
-      // Send success notification with screenshot
-      await notifyBookingSuccess(bookedSlots, screenshotPath);
+      // Navigate to bookings to download receipt
+      console.log("\n=== Downloading receipt ===");
+      console.log("Navigating to My Bookings...");
+      await confirmationPage.viewMyBookingsButton.click();
+
+      // Wait for bookings page to load
+      await page.waitForURL(/.*bookings.*/);
+      await bookingsPage.viewBookingButton
+        .first()
+        .waitFor({ state: "visible" });
+
+      // Click View booking on the first booking
+      console.log("Opening booking details...");
+      await bookingsPage.viewBookingButton.first().click();
+
+      // Wait for modal and click View order
+      console.log("Opening order details...");
+      await bookingsPage.viewOrderButton.waitFor({ state: "visible" });
+      await bookingsPage.viewOrderButton.click();
+
+      // Wait for order page to load
+      await page.waitForURL(/.*order-history.*/);
+      await orderPage.downloadReceiptButton.waitFor({ state: "visible" });
+
+      // Download receipt
+      const receiptPath = "artifacts/receipt.pdf";
+      console.log("Downloading receipt...");
+      await orderPage.downloadReceipt(receiptPath);
+
+      // Send success notification with receipt
+      await notifyBookingSuccess(bookedSlots, receiptPath);
 
       // Success - break out of retry loop
       break;
