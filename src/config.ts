@@ -1,16 +1,16 @@
 import "dotenv/config";
 
-export interface TimeSlot {
+interface TimeSlot {
   day: string; // e.g., "Mon 24"
   time: string; // e.g., "19:40 - 20:20"
 }
 
-export interface TelegramConfig {
+interface TelegramConfig {
   botToken: string;
   chatId: string;
 }
 
-export interface BookingConfig {
+interface BookingConfig {
   bookingUrl: string;
   username: string;
   password: string;

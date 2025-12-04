@@ -161,7 +161,12 @@ async function bookSquashCourts() {
 
       if (attempt >= maxRetries) {
         // Send failure notification only after all retries are exhausted
-        await notifyBookingFailure(error as Error, attempt, maxRetries, failureScreenshotPath);
+        await notifyBookingFailure(
+          error as Error,
+          attempt,
+          maxRetries,
+          failureScreenshotPath
+        );
         console.error(`\n❌ Failed after ${maxRetries} attempts. Giving up.`);
         process.exit(1);
       } else {

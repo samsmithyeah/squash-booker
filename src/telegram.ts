@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import { config } from "./config.js";
 
-export async function sendTelegramMessage(message: string): Promise<void> {
+async function sendTelegramMessage(message: string): Promise<void> {
   if (!config.telegram.botToken || !config.telegram.chatId) {
     console.warn("Telegram credentials not configured. Skipping notification.");
     return;
@@ -26,7 +26,7 @@ export async function sendTelegramMessage(message: string): Promise<void> {
   console.log("Telegram message sent successfully");
 }
 
-export async function sendTelegramPhoto(
+async function sendTelegramPhoto(
   photoPath: string,
   caption: string
 ): Promise<void> {
