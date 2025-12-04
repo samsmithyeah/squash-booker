@@ -1,6 +1,8 @@
 import { BasePage } from "./BasePage.js";
 
 export class ConfirmationPage extends BasePage {
-  // Element locators
   readonly confirmationText = this.page.getByText(/checkout successful/i);
+  readonly viewMyBookingsButton = this.page.getByRole("link", {
+    name: "View my bookings",
+  });
 }
