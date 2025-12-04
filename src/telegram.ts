@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from "path";
 import { config } from "./config.js";
 
 async function sendTelegramMessage(message: string): Promise<void> {
@@ -41,9 +42,9 @@ async function sendTelegramPhoto(
   formData.append("chat_id", config.telegram.chatId);
   formData.append("caption", caption);
 
-  const photoBuffer = fs.readFileSync(photoPath);
+  const photoBuffer = await fs.promises.readFile(photoPath);
   const photoBlob = new Blob([photoBuffer], { type: "image/png" });
-  formData.append("photo", photoBlob, "screenshot.png");
+  formData.append("photo", photoBlob, path.basename(photoPath));
 
   const response = await fetch(url, {
     method: "POST",
@@ -64,8 +65,16 @@ export async function notifyBookingSuccess(
 ): Promise<void> {
   const message = `Squash Court Booking Success!\n\nBooked ${slots.length} time slot(s):\n${slots.map((slot, i) => `${i + 1}. ${slot}`).join("\n")}\n\nCheckout completed successfully!`;
 
-  if (screenshotPath && fs.existsSync(screenshotPath)) {
-    await sendTelegramPhoto(screenshotPath, message);
+  if (screenshotPath) {
+    try {
+      await fs.promises.access(screenshotPath);
+      await sendTelegramPhoto(screenshotPath, message);
+    } catch {
+      console.warn(
+        `Screenshot not found at ${screenshotPath}, sending text only.`
+      );
+      await sendTelegramMessage(message);
+    }
   } else {
     await sendTelegramMessage(message);
   }
@@ -79,8 +88,16 @@ export async function notifyBookingFailure(
 ): Promise<void> {
   const message = `Squash Court Booking Failed\n\nAttempt: ${attempt}/${maxRetries}\n\nError: ${error.message}\n\n${attempt >= maxRetries ? "All retry attempts exhausted." : "Retrying..."}`;
 
-  if (screenshotPath && fs.existsSync(screenshotPath)) {
-    await sendTelegramPhoto(screenshotPath, message);
+  if (screenshotPath) {
+    try {
+      await fs.promises.access(screenshotPath);
+      await sendTelegramPhoto(screenshotPath, message);
+    } catch {
+      console.warn(
+        `Screenshot not found at ${screenshotPath}, sending text only.`
+      );
+      await sendTelegramMessage(message);
+    }
   } else {
     await sendTelegramMessage(message);
   }

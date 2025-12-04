@@ -161,8 +161,9 @@ async function bookSquashCourts() {
 
       if (attempt >= maxRetries) {
         // Send failure notification only after all retries are exhausted
+        const err = error instanceof Error ? error : new Error(String(error));
         await notifyBookingFailure(
-          error as Error,
+          err,
           attempt,
           maxRetries,
           failureScreenshotPath
